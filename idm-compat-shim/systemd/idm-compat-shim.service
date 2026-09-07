@@ -1,0 +1,43 @@
+[Unit]
+Description=IDM Compat Shim — ponte entre a extensão original do IDM e o IDM via Wine
+After=graphical-session.target network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+EnvironmentFile=/home/inside/.config/idm-compat-shim/config.env
+ExecStart=/home/inside/.local/bin/idm-compat-shim \
+  --host ${SHIM_HOST} \
+  --port ${SHIM_PORT} \
+  --wine-prefix ${WINE_PREFIX} \
+  --idm-path ${IDM_PATH} \
+  --auto-download=${AUTO_DOWNLOAD} \
+  --auto-download-types=${AUTO_DOWNLOAD_TYPES} \
+  --verbose=${VERBOSE}
+
+Restart=on-failure
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=idm-compat-shim
+
+# SHIM_PORT (em config.env) deve ser uma porta NAO privilegiada (ex:
+# 18001) -- este processo roda como usuario normal, sem nenhum
+# privilegio especial, de proposito. Quem expoe a porta 1001 "de
+# verdade" (a que a extensao espera) e a regra nftables aplicada por
+# idm-shim-port-redirect.service (unit de SISTEMA, root, so a regra de
+# firewall -- nao roda o shim em si). Ver PORT_REDIRECT.md.
+#
+# IMPORTANTE: --auto-download=${AUTO_DOWNLOAD} usa a sintaxe --flag=valor
+# (nao --flag solto) de proposito -- a biblioteca flag do Go so aceita
+# "true"/"false" explicito nesse formato. Escrever soo "--auto-download"
+# sem "=valor" sempre ativa a flag, IGNORANDO o AUTO_DOWNLOAD do
+# config.env -- foi exatamente esse bug que fez o auto-download ficar
+# preso em "ligado" independente do que o config.env dissesse.
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=default.target

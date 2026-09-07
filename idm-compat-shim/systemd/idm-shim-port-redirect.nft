@@ -1,0 +1,30 @@
+#!/usr/sbin/nft -f
+#
+# ATENÇÃO: este arquivo é só REFERÊNCIA/exemplo (porta 18001 fixa).
+# O install_system_redirect.sh não usa mais este arquivo -- ele GERA
+# o .nft dinamicamente com a porta real configurada em SHIM_PORT.
+# Se for aplicar isso manualmente com uma porta diferente de 18001,
+# ajuste o "18001" abaixo antes de usar `nft -f` neste arquivo direto.
+#
+# Redireciona 127.0.0.1:1001 (porta que a extensao original do IDM espera,
+# privilegiada, <1024) para 127.0.0.1:18001 (onde o idm-compat-shim
+# realmente escuta, rodando sem privilegio nenhum como usuario normal).
+#
+# Isso e aplicado uma vez no nivel do kernel (root) e sobrevive a
+# qualquer rebuild/restart do binario do shim -- ao contrario de setcap,
+# que e perdido a cada `go build` novo.
+
+table ip idm_shim_nat {
+	chain prerouting {
+		type nat hook prerouting priority dstnat; policy accept;
+		tcp dport 1001 dnat to 127.0.0.1:18001
+	}
+
+	# necessario tambem para conexoes originadas do proprio host
+	# (o Chrome roda como processo local conectando em 127.0.0.1,
+	# o que passa pelo hook "output", nao "prerouting")
+	chain output {
+		type nat hook output priority dstnat; policy accept;
+		tcp dport 1001 dnat to 127.0.0.1:18001
+	}
+}

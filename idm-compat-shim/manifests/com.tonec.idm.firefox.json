@@ -1,0 +1,9 @@
+{
+  "name": "com.tonec.idm",
+  "description": "IDM Compat Shim (idm-compat-shim) — ponte de compatibilidade com a extensao original do Internet Download Manager",
+  "path": "__SHIM_BINARY_PATH__",
+  "type": "stdio",
+  "allowed_extensions": [
+    "mozilla_cc3@internetdownloadmanager.com"
+  ]
+}

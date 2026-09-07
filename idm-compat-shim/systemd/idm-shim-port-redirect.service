@@ -1,0 +1,12 @@
+[Unit]
+Description=Redireciona porta 1001 -> 18001 para o idm-compat-shim
+After=network.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/nft -f /etc/idm-compat-shim/idm-shim-port-redirect.nft
+ExecStop=/usr/sbin/nft delete table ip idm_shim_nat
+
+[Install]
+WantedBy=multi-user.target
